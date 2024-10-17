@@ -35,12 +35,12 @@ local function calculate_pulse()
   -- select instruments
   local current_instrument = renoise.song().selected_instrument
   local current_phrase = renoise.song().selected_phrase  
-
+ 
   -- calculate the number of beats in the phrase
   -- needed to create a perfect circle
-  local beat_spacing = song_lines_per_beat
-  local new_lines_count = song_lines_per_beat * notes_count  
-  local lines_per_beat = notes_count
+  local beat_spacing = song_lines_per_beat * current_pulse
+  local new_lines_count = song_lines_per_beat * notes_count * current_pulse
+  local lines_per_beat = notes_count * current_pulse
   
   -- set the phrase props
   current_phrase:clear()
