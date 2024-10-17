@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RenoiseScriptingTool doc_version="0">
+  <ApiVersion>6</ApiVersion>
+  <AutoUpgraded>true</AutoUpgraded>
+  <Id>com.kejkz.repulse</Id>
+  <Version>0.30</Version>
+  <Author>kejkz | kejkzz@gmail.com </Author>
+  <Name>RePulse</Name>
+  <Category>Phrases</Category>
+  <Description>Creates a phrases ready for polyrhytmic programming using definition through pulses</Description>
+</RenoiseScriptingTool>
