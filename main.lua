@@ -29,7 +29,7 @@ end
 
 local options = renoise.Document.create("RePulse") {
   show_debug_prints = false,
-  version = "0.2 alpha",
+  version = "0.3 alpha",
   current_pulse = 1,
   rotate_pulse = 0,
   rotate_pulse_fine = 0,
@@ -114,7 +114,7 @@ function show_gui()
       vb:slider {
         id = "pulse_rotation_slider",
         min = 0,
-        max = options.current_pulse.value,
+        max = rotation_slider_max(),
         steps = {1,1},        
         bind = options.rotate_pulse
       },
@@ -187,9 +187,13 @@ renoise.tool():add_menu_entry {
 }
 
 function update_pulse_rotation_max_value()
+  vb.views.pulse_rotation_slider.max = rotation_slider_max()
+end
+
+function rotation_slider_max()
   local current_pulse = math.floor(options.current_pulse.value)
   local rotation_max = renoise.song().transport.lpb
-  vb.views.pulse_rotation_slider.max = current_pulse * rotation_max - 1
+  return current_pulse * rotation_max - 1
 end
 
 function update_ui_and_calculate()
