@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RePulse doc_version="0">
-  <notes_count>2</notes_count>
-  <current_pulse>1.0</current_pulse>
+  <notes_count>1.0</notes_count>
+  <version>0.2 alpha</version>
   <rotate_pulse_fine>0.0</rotate_pulse_fine>
   <show_debug_prints>false</show_debug_prints>
   <rotate_pulse>0.0</rotate_pulse>
+  <current_pulse>4</current_pulse>
 </RePulse>

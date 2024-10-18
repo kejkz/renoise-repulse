@@ -1,9 +1,26 @@
 -- Renoise Pulse tool - RePulse
 -- author: kejkzz@gmail.com
 
--- setup script environment
 local vb = nil
 local dialog = nil
+local NOTES_POLYGONS = {
+  '2-gon',
+  '3-gon',
+  '4-gon',
+  '5-gon',
+  '6-gon',
+  '7-gon',
+  '8-gon',
+  '9-gon',
+  '10-gon',
+  '11-gon',
+  '12-gon',
+  '13-gon',
+  '17-gon',
+  '19-gon',
+  '23-gon',
+  '29-gon'
+}
 
 local function show_status(message)
   renoise.app():show_status(message)
@@ -12,6 +29,7 @@ end
 
 local options = renoise.Document.create("RePulse") {
   show_debug_prints = false,
+  version = "0.2 alpha",
   current_pulse = 1,
   rotate_pulse = 0,
   rotate_pulse_fine = 0,
@@ -52,6 +70,7 @@ local function calculate_pulse()
   current_phrase.number_of_lines = new_lines_count  
   current_phrase.lpb = lines_per_beat
   current_phrase.delay_column_visible = true
+  current_phrase.name = string.format("Gen %s", NOTES_POLYGONS[options.notes_count.value])
   
   -- Fill notes  
   for i = 1 + current_shift, new_lines_count, beat_spacing  do
@@ -82,24 +101,7 @@ function show_gui()
         style = 'strong'
       },
       vb:popup {
-        items = {
-          '2-gon',
-          '3-gon',
-          '4-gon',
-          '5-gon',
-          '6-gon',
-          '7-gon',
-          '8-gon',
-          '9-gon',
-          '10-gon',
-          '11-gon',
-          '12-gon',
-          '13-gon',
-          '17-gon',
-          '19-gon',
-          '23-gon',
-          '29-gon'
-        },
+        items = NOTES_POLYGONS,
         value = 1,
         width = 70,
         tooltip = 'Polygon Shape',
@@ -178,7 +180,7 @@ function show_gui()
   dialog = renoise.app():show_custom_dialog('RePulse', dialog_content)
 end
 
--- Tool setup
+-- setup the tool
 renoise.tool():add_menu_entry {
   name = "Phrase Editor:Pulse...",
   invoke = show_gui
@@ -187,7 +189,7 @@ renoise.tool():add_menu_entry {
 function update_pulse_rotation_max_value()
   local current_pulse = math.floor(options.current_pulse.value)
   local rotation_max = renoise.song().transport.lpb
-  vb.views.pulse_rotation_slider.max = current_pulse * rotation_max
+  vb.views.pulse_rotation_slider.max = current_pulse * rotation_max - 1
 end
 
 function update_ui_and_calculate()
@@ -195,7 +197,7 @@ function update_ui_and_calculate()
   update_pulse_rotation_max_value()
 end
 
--- Do UI events binding...
+-- Setup observables
 options.current_pulse:add_notifier(update_ui_and_calculate)
 options.rotate_pulse:add_notifier(calculate_pulse)
 options.rotate_pulse_fine:add_notifier(calculate_pulse)
