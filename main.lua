@@ -21,6 +21,16 @@ local NOTES_POLYGONS = {
   '23-gon',
   '29-gon'
 }
+local NOTES = {
+  'C-0', 'C#0', 'D-0', 'D#0', 'E-0', 'F-0', 'F#0', 'G-0', 'G#0', 'A-0', 'A#0', 'B-0',
+  'C-1', 'C#1', 'D-1', 'D#1', 'E-1', 'F-1', 'F#1', 'G-1', 'G#1', 'A-1', 'A#1', 'B-1',
+  'C-2', 'C#2', 'D-2', 'D#2', 'E-2', 'F-2', 'F#2', 'G-2', 'G#2', 'A-2', 'A#2', 'B-2',
+  'C-3', 'C#3', 'D-3', 'D#3', 'E-3', 'F-3', 'F#3', 'G-3', 'G#3', 'A-3', 'A#3', 'B-3',
+  'C-4', 'C#4', 'D-4', 'D#4', 'E-4', 'F-4', 'F#4', 'G-4', 'G#4', 'A-4', 'A#4', 'B-4',
+  'C-5', 'C#5', 'D-5', 'D#5', 'E-5', 'F-5', 'F#5', 'G-5', 'G#5', 'A-5', 'A#5', 'B-5',
+  'C-6', 'C#6', 'D-6', 'D#6', 'E-6', 'F-6', 'F#6', 'G-6', 'G#6', 'A-6', 'A#6', 'B-6',
+  'C-7', 'C#7', 'D-7', 'D#6', 'E-7', 'F-7', 'F#7', 'G-7', 'G#7', 'A-7', 'A#7', 'B-7',
+}
 
 local function show_status(message)
   renoise.app():show_status(message)
@@ -31,6 +41,7 @@ local options = renoise.Document.create("RePulse") {
   show_debug_prints = false,
   version = "0.3 alpha",
   current_pulse = 1,
+  current_note = 1,
   rotate_pulse = 0,
   rotate_pulse_fine = 0,
   notes_count = 2
@@ -49,7 +60,7 @@ renoise.tool().preferences = options
 
 local function calculate_pulse()
   local song_lines_per_beat = renoise.song().transport.lpb
-  local track_note_value = 48
+  local track_note_value = options.current_note.value
   local volume_value = 40  
   local notes_count = options.notes_count.value + 1
   local current_pulse = math.floor(options.current_pulse.value)
@@ -106,6 +117,20 @@ function show_gui()
         width = 70,
         tooltip = 'Polygon Shape',
         bind = options.notes_count
+      },
+      vb:text {
+        text = 'Note'
+      },
+      vb:popup {
+        id = "track_note",
+        items = NOTES,
+        value = options.current_note.value,
+        width = 70,
+        tooltip = "Select a pitch",
+        notifier = function(value)
+          options.current_note.value = value - 1
+          calculate_pulse()
+        end
       },
       vb:text {
         text = 'Beat shift',
@@ -203,6 +228,7 @@ end
 
 -- Setup observables
 options.current_pulse:add_notifier(update_ui_and_calculate)
+options.current_note:add_notifier(calculate_pulse)
 options.rotate_pulse:add_notifier(calculate_pulse)
 options.rotate_pulse_fine:add_notifier(calculate_pulse)
 options.notes_count:add_notifier(calculate_pulse)
