@@ -1,6 +1,10 @@
 -- Renoise Pulse tool - RePulse
 -- author: kejkzz@gmail.com
 
+-- setup script environment
+local vb = nil
+local dialog = nil
+
 local function show_status(message)
   renoise.app():show_status(message)
   print(message)
@@ -9,8 +13,8 @@ end
 local options = renoise.Document.create("RePulse") {
   show_debug_prints = false,
   current_pulse = 1,
-  shift_phase = 0,
-  subphase_shift = 0,
+  rotate_pulse = 0,
+  rotate_pulse_fine = 0,
   notes_count = 2
 }
 
@@ -31,8 +35,8 @@ local function calculate_pulse()
   local volume_value = 40  
   local notes_count = options.notes_count.value + 1
   local current_pulse = math.floor(options.current_pulse.value)
-  local current_shift = math.floor(options.shift_phase.value)
-  local subphase_shift = math.floor(options.subphase_shift.value)
+  local current_shift = math.floor(options.rotate_pulse.value)
+  local rotate_pulse_fine = math.floor(options.rotate_pulse_fine.value)
   -- select instruments
   local current_instrument = renoise.song().selected_instrument
   local current_phrase = renoise.song().selected_phrase  
@@ -54,22 +58,23 @@ local function calculate_pulse()
     local current_line = current_phrase:line(i)
     local current_note = current_line:note_column(1)
     current_note.note_value = track_note_value
-    current_note.delay_value = subphase_shift
+    current_note.delay_value = rotate_pulse_fine
     current_note.volume_value = volume_value
     
     current_phrase:line(i + 1):note_column(1).note_value = 120 -- note off
   end    
 end
 
-options.current_pulse:add_notifier(calculate_pulse)
-options.shift_phase:add_notifier(calculate_pulse)
-options.subphase_shift:add_notifier(calculate_pulse)
-options.notes_count:add_notifier(calculate_pulse)
+function show_gui()
+  if dialog and dialog.visible then
+    dialog:show()
+    return
+  end
 
-function show_gui()  
+  vb = renoise.ViewBuilder()
   local DEFAULT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
-  local TEXT_ROW_WIDTH = 80  
-  local vb = renoise.ViewBuilder()
+  local TEXT_ROW_WIDTH = 80
+
   local track_row = vb:row {
     vb:column {
       vb:text {
@@ -105,18 +110,18 @@ function show_gui()
         style = 'strong'
       },
       vb:slider {
-        id = "pulse_rotation",
+        id = "pulse_rotation_slider",
         min = 0,
         max = options.current_pulse.value,
         steps = {1,1},        
-        bind = options.shift_phase
+        bind = options.rotate_pulse
       },
       vb:valuefield {
         id = "pulse_shift_input",
         min = 0,
         max = 3,        
         width = TEXT_ROW_WIDTH,
-        bind = options.shift_phase,
+        bind = options.rotate_pulse,
         tonumber = function(value)          
           return math.floor(value)
         end,
@@ -129,14 +134,14 @@ function show_gui()
         steps = {1,1},
         min = 0,
         max = 255,
-        bind = options.subphase_shift
+        bind = options.rotate_pulse_fine
       },
       vb:valuefield {
         id = "pulse_subphase_rotation_input",
         min = 0,
         max = 255,
         width = TEXT_ROW_WIDTH,
-        bind = options.subphase_shift,
+        bind = options.rotate_pulse_fine,
         tonumber = function(value)          
           return math.floor(value)
         end,
@@ -170,13 +175,30 @@ function show_gui()
       track_row
     }
   }
-  renoise.app():show_custom_dialog('RePulse', dialog_content)
+  dialog = renoise.app():show_custom_dialog('RePulse', dialog_content)
 end
--- setup the tool
 
+-- Tool setup
 renoise.tool():add_menu_entry {
   name = "Phrase Editor:Pulse...",
   invoke = show_gui
 }
 
-renoise.song().transport.lpb_observable:add_notifier(calculate_pulse)
+function update_pulse_rotation_max_value()
+  local current_pulse = math.floor(options.current_pulse.value)
+  local rotation_max = renoise.song().transport.lpb
+  vb.views.pulse_rotation_slider.max = current_pulse * rotation_max
+end
+
+function update_ui_and_calculate()
+  calculate_pulse()
+  update_pulse_rotation_max_value()
+end
+
+-- Do UI events binding...
+options.current_pulse:add_notifier(update_ui_and_calculate)
+options.rotate_pulse:add_notifier(calculate_pulse)
+options.rotate_pulse_fine:add_notifier(calculate_pulse)
+options.notes_count:add_notifier(calculate_pulse)
+
+renoise.song().transport.lpb_observable:add_notifier(update_ui_and_calculate)

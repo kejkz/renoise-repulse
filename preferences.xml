@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RePulse doc_version="0">
-  <subphase_shift>1.0</subphase_shift>
+  <notes_count>2</notes_count>
   <current_pulse>1.0</current_pulse>
-  <shift_phase>0.0</shift_phase>
+  <rotate_pulse_fine>0.0</rotate_pulse_fine>
   <show_debug_prints>false</show_debug_prints>
-  <notes_count>3</notes_count>
+  <rotate_pulse>0.0</rotate_pulse>
 </RePulse>
