@@ -41,7 +41,8 @@ local options = renoise.Document.create("RePulse") {
   show_debug_prints = false,
   version = "0.3 alpha",
   current_pulse = 1,
-  current_note = 1,
+  current_note = 48,
+  pulse_note_volume = 40,
   rotate_pulse = 0,
   rotate_pulse_fine = 0,
   notes_count = 2
@@ -61,7 +62,7 @@ renoise.tool().preferences = options
 local function calculate_pulse()
   local song_lines_per_beat = renoise.song().transport.lpb
   local track_note_value = options.current_note.value
-  local volume_value = 40  
+  local volume_value = options.pulse_note_volume.value
   local notes_count = options.notes_count.value + 1
   local current_pulse = math.floor(options.current_pulse.value)
   local current_shift = math.floor(options.rotate_pulse.value)
@@ -102,8 +103,10 @@ function show_gui()
   end
 
   vb = renoise.ViewBuilder()
+
   local DEFAULT_MARGIN = renoise.ViewBuilder.DEFAULT_CONTROL_MARGIN
   local TEXT_ROW_WIDTH = 80
+  local TEXT_INPUT_WIDTH = 20
 
   local track_row = vb:row {
     vb:column {
@@ -136,46 +139,91 @@ function show_gui()
         text = 'Beat shift',
         style = 'strong'
       },
-      vb:slider {
-        id = "pulse_rotation_slider",
-        min = 0,
-        max = rotation_slider_max(),
-        steps = {1,1},        
-        bind = options.rotate_pulse
+      vb:row {
+        vb:slider {
+          id = "pulse_rotation_slider",
+          min = 0,
+          max = rotation_slider_max(),
+          steps = {1,1},
+          bind = options.rotate_pulse
+        },
+        vb:valuefield {
+          id = "pulse_shift_input",
+          min = 0,
+          max = 3,
+          width = TEXT_INPUT_WIDTH,
+          bind = options.rotate_pulse,
+          tonumber = function(value)
+            return math.floor(value)
+          end,
+          tostring = function(value)
+            return string.format("%d", value)
+          end
+        },
+        vb:text {
+          text = 'pulse rotation',
+          style = 'strong'
+        },
       },
-      vb:valuefield {
-        id = "pulse_shift_input",
-        min = 0,
-        max = 3,        
-        width = TEXT_ROW_WIDTH,
-        bind = options.rotate_pulse,
-        tonumber = function(value)          
-          return math.floor(value)
-        end,
-        tostring = function(value)
-          return string.format("%d", value)
-        end
+      vb:row {
+        vb:slider {
+          id = "pulse_subphase_rotation",
+          steps = {1,1},
+          min = 0,
+          max = 255,
+          bind = options.rotate_pulse_fine
+        },
+        vb:valuefield {
+          id = "pulse_subphase_rotation_input",
+          min = 0,
+          max = 255,
+          width = TEXT_INPUT_WIDTH,
+          bind = options.rotate_pulse_fine,
+          tonumber = function(value)
+            return math.floor(value)
+          end,
+          tostring = function(value)
+            return string.format("%d", value)
+          end
+        },
+        vb:text {
+          text = 'pulse fine rotation',
+          style = 'strong'
+        },
       },
-      vb:slider {
-        id = "pulse_subphase_rotation",
-        steps = {1,1},
-        min = 0,
-        max = 255,
-        bind = options.rotate_pulse_fine
-      },
-      vb:valuefield {
-        id = "pulse_subphase_rotation_input",
-        min = 0,
-        max = 255,
-        width = TEXT_ROW_WIDTH,
-        bind = options.rotate_pulse_fine,
-        tonumber = function(value)          
-          return math.floor(value)
-        end,
-        tostring = function(value)
-          return string.format("%d", value)
-        end
+      vb:row {
+        vb:slider {
+          id = "pulse_note_volume",
+          min = 1,
+          max = 127,
+          steps = {1,1},
+          bind = options.pulse_note_volume
+        },
+        vb:valuefield {
+          id = "pulse_note_volume_value_field",
+          min = 0,
+          max = 127,
+          width = TEXT_INPUT_WIDTH,
+          bind = options.pulse_note_volume,
+          tonumber = function(value)
+            return math.floor(value)
+          end,
+          tostring = function(value)
+            return string.format("%d", value)
+          end
+        },
+        vb:text {
+          text = 'volume',
+          style = 'strong'
+        },
       }
+      -- vb:slider {
+      --   id = "pulse_note_duration",
+      --   min = 1,
+      --   max = 127,
+      --   steps = {1,1},
+      --   bind = options.pulse_note_volume
+      -- }
     }
   }
 
@@ -183,13 +231,14 @@ function show_gui()
     margin = DEFAULT_MARGIN,
     vb:row {
       vb:valuebox {
+        id = 'pulses_per_beat_multiplier',
         min = 1,
-        max = 96,
+        max = pulses_per_beat_max(), -- recalculate dynamically according to the song lpb...
         tooltip = 'Pulses per beat multiplier',
         bind = options.current_pulse
       },
       vb:text {        
-        text = 'pulses',
+        text = 'multiplier',
         width = TEXT_ROW_WIDTH,        
       },
     },    
@@ -221,6 +270,16 @@ function rotation_slider_max()
   return current_pulse * rotation_max - 1
 end
 
+-- need to limit the max taking into account the selected pulses multiplier
+-- and the song lpb
+function pulses_per_beat_max()
+  local current_pulse = math.floor(options.current_pulse.value)
+  local song_lpb = renoise.song().transport.lpb
+  local pulses_per_beat = current_pulse * song_lpb
+
+  return 64 --this still needs to be figured out
+end
+
 function update_ui_and_calculate()
   calculate_pulse()
   update_pulse_rotation_max_value()
@@ -232,5 +291,6 @@ options.current_note:add_notifier(calculate_pulse)
 options.rotate_pulse:add_notifier(calculate_pulse)
 options.rotate_pulse_fine:add_notifier(calculate_pulse)
 options.notes_count:add_notifier(calculate_pulse)
+options.pulse_note_volume:add_notifier(calculate_pulse)
 
 renoise.song().transport.lpb_observable:add_notifier(update_ui_and_calculate)
