@@ -45,16 +45,27 @@ local options = renoise.Document.create("RePulse") {
   pulse_note_volume = 40,
   rotate_pulse = 0,
   rotate_pulse_fine = 0,
-  notes_count = 2
+  notes_count = 2,
+  lowest_common_multiplier = 2
 }
 
-local function lowest_common_multiplier(pulse, notes_count)
-  local res = pulse % notes_count
+local function lowest_common_multiplier(a, b)
+  local res = a % b
   if res == 0 then
-    return notes_count
+    return a
   else
-    return lowest_common_multiplier(notes_count, res)
+    return lowest_common_multiplier(b, res)
   end    
+end
+
+local function greatest_common_divisor(a, b)
+  local t
+  while b ~= 0 do
+    t = b
+    b = math.fmod(a, b)
+    a = t
+  end
+  return a
 end
 
 renoise.tool().preferences = options
@@ -67,6 +78,7 @@ local function calculate_pulse()
   local current_pulse = math.floor(options.current_pulse.value)
   local current_shift = math.floor(options.rotate_pulse.value)
   local rotate_pulse_fine = math.floor(options.rotate_pulse_fine.value)
+
   -- select instruments
   local current_instrument = renoise.song().selected_instrument
   local current_phrase = renoise.song().selected_phrase  
@@ -76,6 +88,9 @@ local function calculate_pulse()
   local beat_spacing = song_lines_per_beat * current_pulse
   local new_lines_count = song_lines_per_beat * notes_count * current_pulse
   local lines_per_beat = notes_count * current_pulse
+
+  -- update the lowest commong multiplier (still test phase)
+  options.lowest_common_multiplier.value = lowest_common_multiplier(current_pulse * song_lines_per_beat, notes_count)
   
   -- set the phrase props
   current_phrase:clear()
@@ -116,7 +131,7 @@ function show_gui()
       },
       vb:popup {
         items = NOTES_POLYGONS,
-        value = 1,
+        value = options.notes_count.value,
         width = 70,
         tooltip = 'Polygon Shape',
         bind = options.notes_count
@@ -241,6 +256,15 @@ function show_gui()
         text = 'multiplier',
         width = TEXT_ROW_WIDTH,        
       },
+      vb:text {
+        text = 'LCM:'
+      },
+      vb:value {
+        value = options.lowest_common_multiplier.value,
+        font = 'bold',
+        tooltip = 'The number that evenly divides the currently selected pulses count',
+        bind = options.lowest_common_multiplier
+      }
     },    
     vb:column {      
       style = "group",      
@@ -256,7 +280,7 @@ end
 
 -- setup the tool
 renoise.tool():add_menu_entry {
-  name = "Phrase Editor:Pulse...",
+  name = "Phrase Editor:Generate Pulse...",
   invoke = show_gui
 }
 
