@@ -3,10 +3,10 @@
   <current_pulse>1.0</current_pulse>
   <show_debug_prints>false</show_debug_prints>
   <current_note>48</current_note>
-  <notes_count>4</notes_count>
+  <notes_count>2</notes_count>
   <version>0.2 alpha</version>
-  <pulse_note_volume>71.560000000000002</pulse_note_volume>
-  <lowest_common_multiplier>1.0</lowest_common_multiplier>
-  <rotate_pulse_fine>64.25999999999992</rotate_pulse_fine>
+  <pulse_note_volume>46.863999999999905</pulse_note_volume>
+  <lowest_common_multiplier>3</lowest_common_multiplier>
+  <rotate_pulse_fine>0.0</rotate_pulse_fine>
   <rotate_pulse>0.0</rotate_pulse>
 </RePulse>

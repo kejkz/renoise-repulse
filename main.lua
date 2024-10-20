@@ -49,23 +49,12 @@ local options = renoise.Document.create("RePulse") {
   lowest_common_multiplier = 2
 }
 
-local function lowest_common_multiplier(a, b)
-  local res = a % b
-  if res == 0 then
+local function greatest_common_divisor(a, b)
+  if (b == 0) then
     return a
   else
-    return lowest_common_multiplier(b, res)
-  end    
-end
-
-local function greatest_common_divisor(a, b)
-  local t
-  while b ~= 0 do
-    t = b
-    b = math.fmod(a, b)
-    a = t
+    return greatest_common_divisor(b, a % b)
   end
-  return a
 end
 
 renoise.tool().preferences = options
@@ -90,7 +79,13 @@ local function calculate_pulse()
   local lines_per_beat = notes_count * current_pulse
 
   -- update the lowest commong multiplier (still test phase)
-  options.lowest_common_multiplier.value = lowest_common_multiplier(current_pulse * song_lines_per_beat, notes_count)
+  local lowest_common_multiplier = 0
+  if song_lines_per_beat % notes_count == 0 then
+    lowest_common_multiplier = song_lines_per_beat
+  else
+    lowest_common_multiplier = song_lines_per_beat * notes_count
+  end
+  options.lowest_common_multiplier.value = lowest_common_multiplier
   
   -- set the phrase props
   current_phrase:clear()
@@ -254,15 +249,16 @@ function show_gui()
       },
       vb:text {        
         text = 'multiplier',
-        width = TEXT_ROW_WIDTH,        
       },
       vb:text {
-        text = 'LCM:'
+        text = 'LCM:',
+        font = 'bold',
+        tooltip = 'The number that evenly divides the the currently selected note counts per track'
       },
       vb:value {
         value = options.lowest_common_multiplier.value,
         font = 'bold',
-        tooltip = 'The number that evenly divides the currently selected pulses count',
+        tooltip = 'The number that evenly divides the the currently selected note counts per track',
         bind = options.lowest_common_multiplier
       }
     },    
